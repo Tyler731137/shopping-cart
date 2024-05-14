@@ -195,7 +195,7 @@
     <!-- End of Navigation Bar -->
 
    <!-- Speech-to-Text Script -->
-<script>
+  <script>
     // Check browser support
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -222,7 +222,7 @@
     } else {
         console.error("Speech recognition not supported in this browser.");
     }
-</script>
+</script> 
 
 
 </body>
