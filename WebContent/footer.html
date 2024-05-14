@@ -85,6 +85,59 @@
         #toggle-panel-btn.rotate {
             transform: rotate(180deg); /* Rotate button icon when panel is shown */
         }
+
+        #toggle-navigation-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: transparent; /* Transparent background */
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease; /* Add transition effect for button */
+            font-size: 20px;
+            color: #33cc33; /* Green icon color */
+            z-index: 1; /* Ensure the button is above the panel */
+        }
+
+        #toggle-navigation-btn:hover {
+            color: red; /* Red on hover */
+        }
+
+        #toggle-navigation-btn:active {
+            color: blue; /* Blue while active */
+        }
+
+        #toggle-navigation-btn.rotate {
+            transform: rotate(180deg); /* Rotate button icon when panel is shown */
+        }
+
+        #keyboard-navigation-instructions {
+            position: fixed;
+            bottom: 20px;
+            left: -300px; /* Initially off-screen */
+            transition: left 0.3s ease; /* Transition effect */
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+        }
+
+        #keyboard-navigation-instructions.show {
+            left: 50px; /* Moves panel into view */
+        }
+
+        #keyboard-navigation-instructions ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #keyboard-navigation-instructions li {
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body style="background-color: #E6F9E6;">
@@ -138,82 +191,105 @@
     <!-- Glyphicon for toggle panel -->
     <button id="toggle-panel-btn" class="glyphicon glyphicon-chevron-left"> </button>
 
-<script>
-    $(document).ready(function(){
-        var synth = window.speechSynthesis;
-        var utterance;
-        var words = [];
-        var currentWordIndex = 0;
+    <!-- Toggle button for keyboard navigation instructions -->
+    <button id="toggle-navigation-btn" class="glyphicon glyphicon-chevron-right"> </button>
 
-        function initializeUtterance() {
-            utterance = new SpeechSynthesisUtterance(document.body.innerText);
-            utterance.lang = 'en-US';
-            utterance.rate = parseFloat($('#speed').val());
-            words = utterance.text.split(/\s+/);
-            currentWordIndex = 0;
-        }
+    <!-- Keyboard Navigation Instructions -->
+    <div id="keyboard-navigation-instructions">
+        <p style="font-size: 16px; font-weight: bold;">Keyboard Navigation Instructions:</p>
+        <ul>
+            <li>Press <strong>Shift + Tab</strong> to move focus to the previous interactive element.</li>
+            <li>Press <strong>Tab</strong> to move focus to the next interactive element.</li>
+            <li>Press <strong>Enter</strong> to activate buttons or submit forms.</li>
+            <li>Press <strong>Space</strong> to play or pause speech.</li>
+            <li>Press <strong>Arrow Right</strong> to skip forward in speech.</li>
+            <li>Press <strong>Arrow Left</strong> to skip backward in speech.</li>
+            <li>Press <strong>Alt</strong> + <strong>Arrow Up/Down</strong> to adjust speech speed.</li>
+        </ul>
+    </div>
 
-        // Button click event handlers
-        $('#play').click(function(){
-            if (synth.paused) {
-                synth.resume();
-                $(this).html('<span class="glyphicon glyphicon-pause"></span>');
-            } else if (synth.speaking) {
-                synth.pause();
-                $(this).html('<span class="glyphicon glyphicon-play"></span>');
-            } else {
-                initializeUtterance();
+    <script>
+        $(document).ready(function(){
+            var synth = window.speechSynthesis;
+            var utterance;
+            var words = [];
+            var currentWordIndex = 0;
+
+            function initializeUtterance() {
+                utterance = new SpeechSynthesisUtterance(document.body.innerText);
+                utterance.lang = 'en-US';
+                utterance.rate = parseFloat($('#speed').val());
+                words = utterance.text.split(/\s+/);
+                currentWordIndex = 0;
+            }
+
+            // Button click event handlers
+            $('#play').click(function(){
+                if (synth.paused) {
+                    synth.resume();
+                    $(this).html('<span class="glyphicon glyphicon-pause"></span>');
+                } else if (synth.speaking) {
+                    synth.pause();
+                    $(this).html('<span class="glyphicon glyphicon-play"></span>');
+                } else {
+                    initializeUtterance();
+                    synth.speak(utterance);
+                    $(this).html('<span class="glyphicon glyphicon-pause"></span>');
+                }
+            });
+
+            $('#stop').click(function(){
+                synth.cancel();
+                $('#play').html('<span class="glyphicon glyphicon-play"></span>');
+            });
+
+            $('#rewind-word').click(function(){
+                rewindWord();
+            });
+
+            $('#forward-word').click(function(){
+                forwardWord();
+            });
+
+            function rewindWord() {
+                if (currentWordIndex > 0) {
+                    currentWordIndex-=4;
+                    speakWord();
+                }
+            }
+
+            function forwardWord() {
+                if (currentWordIndex < words.length - 1) {
+                    currentWordIndex+=4;
+                    speakWord();
+                }
+            }
+
+            function speakWord() {
+                var newUtteranceText = words.slice(currentWordIndex).join(' ');
+                utterance.text = newUtteranceText;
+                synth.cancel();
                 synth.speak(utterance);
-                $(this).html('<span class="glyphicon glyphicon-pause"></span>');
             }
+
+            $('#speed').on('input', function(){
+                utterance.rate = parseFloat($(this).val());
+                synth.speak(utterance);
+            });
+
+            // Toggle panel visibility
+            $('#toggle-panel-btn').click(function(){
+                $('#read-aloud-controls').toggleClass('show');
+                $(this).toggleClass('rotate');
+            });
+
+            // Toggle keyboard navigation instructions visibility
+            $('#toggle-navigation-btn').click(function(){
+                $('#keyboard-navigation-instructions').toggleClass('show');
+                $(this).toggleClass('rotate');
+            });
         });
-
-        $('#stop').click(function(){
-            synth.cancel();
-            $('#play').html('<span class="glyphicon glyphicon-play"></span>');
-        });
-
-        $('#rewind-word').click(function(){
-            rewindWord();
-        });
-
-        $('#forward-word').click(function(){
-            forwardWord();
-        });
-
-        function rewindWord() {
-            if (currentWordIndex > 0) {
-                currentWordIndex-=4;
-                speakWord();
-            }
-        }
-
-        function forwardWord() {
-            if (currentWordIndex < words.length - 1) {
-                currentWordIndex+=4;
-                speakWord();
-            }
-        }
-
-        function speakWord() {
-            var newUtteranceText = words.slice(currentWordIndex).join(' ');
-            utterance.text = newUtteranceText;
-            synth.cancel();
-            synth.speak(utterance);
-        }
-
-        $('#speed').on('input', function(){
-            utterance.rate = parseFloat($(this).val());
-            synth.speak(utterance);
-        });
-
-        // Toggle panel visibility
-        $('#toggle-panel-btn').click(function(){
-            $('#read-aloud-controls').toggleClass('show');
-            $(this).toggleClass('rotate');
-        });
-    });
-</script>
+    </script>
 
 </body>
 </html>
